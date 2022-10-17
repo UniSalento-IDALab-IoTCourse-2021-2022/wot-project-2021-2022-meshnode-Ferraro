@@ -717,6 +717,9 @@ def main():
 	
 
 	mainloop.run()
+
+	with open("/home/pi/project/src/token.txt") as tkfile:
+		tkfile.write(f"{token}")
 	
 	
 if __name__ == '__main__':

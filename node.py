@@ -618,7 +618,7 @@ class MyVendor(Model):
 		if period < 1000:
 			return
 		
-		with open('scan.txt') as f:
+		with open('/home/pi/project/src/scan.txt') as f:
 			lines = f.readlines()
 			if len(lines) == 0:
 				mainloop.quit()
