@@ -1,96 +1,6 @@
 #!/usr/bin/env python3
 
-###################################################################
-#
-# This is a unified test sample for BT Mesh
-#
-# To run the test:
-#     test-mesh [token]
-#
-#            'token' is an optional argument. It must be a 16-digit
-#            hexadecimal number. The token must be associated with
-#            an existing node. The token is generated and assigned
-#            to a node as a result of successful provisioning (see
-#            explanation of "join" option).
-#            When the token is set, the menu operations "attach"
-#            and "remove" may be performed on a node specified
-#            by this token.
-#
-#      The test imitates a device with 2 elements:
-#            element 0: OnOff Server model
-#                       Sample Vendor model
-#            element 1: OnOff Client model
-#
-# The main menu:
-#       token
-#       join
-#       attach
-#       remove
-#       dest
-#       uuid
-#       app-index
-#       client-menu
-#       exit
-#
-# The main menu options explained:
-#     token
-#            Set the unique node token.
-#            The token can be set from command line arguments as
-#            well.
-#
-#     join
-#            Request provisioning of a device to become a node
-#            on a mesh network. The test generates device UUID
-#            which is displayed and will need to be provided to
-#            an outside entity that acts as a Provisioner. Also,
-#            during the provisioning process, an agent that is
-#            part of the test, will request (or will be requested)
-#            to perform a specified operation, e.g., a number will
-#            be displayed and this number will need to be  entered
-#            on the Provisioner's side.
-#            In case of successful provisioning, the application
-#            automatically attaches as a node to the daemon. A node
-#            'token' is returned to the application and is used
-#            for the runtime of the test.
-#
-#     attach
-#            Attach the application to bluetoothd-daemon as a node.
-#            For the call to be successful, the valid node token must
-#            be already set, either from command arguments or by
-#            executing "set token" operation or automatically after
-#            successfully executing "join" operation in the same
-#            test run.
-#
-#     remove
-#           Permanently removes any node configuration from daemon
-#           and persistent storage. After this operation, the node
-#           is permanently forgotten by the daemon and the associated
-#           node token is no longer valid.
-#
-#     dest
-#           Set destination address to send messages: 4 hex digits
-#
-#     app-index
-#           Set AppKey index to indicate which application key to use
-#           to encode outgoing messages: up to 3 hex digits
-#
-#     vendor-send
-#           Allows to send an arbitrary endor message.
-#           The destination is set based on previously executed "dest"
-#           command (if not set, the outbound message will fail).
-#           User is prompted to enter hex bytearray payload.
-#           The message is originated from the vendor model registered
-#           on element 0. For the command to succeed, the AppKey index
-#           that is set by executing "app-key" must correspond to the
-#           application key to which the Sample Vendor model is bound.
-#
-#     client-menu
-#           Enter On/Off client submenu.
-#
-#     quit
-#           Exits the test.
-#
-###################################################################
+
 import sys
 import struct
 import fcntl
@@ -469,7 +379,7 @@ class Element(dbus.service.Object):
 		props['Models'] = dbus.Array(sig_models, signature='(qa{sv})')
 		props['VendorModels'] = dbus.Array(vendor_models,
 							signature='(qqa{sv})')
-		#print(props)
+
 		return { MESH_ELEMENT_IFACE: props }
 
 	def add_model(self, model):
@@ -593,11 +503,11 @@ class Model():
 class MyVendor(Model):
 	def __init__(self, model_id):
 		Model.__init__(self, model_id)
-		self.vendor = 0x05F1 #!!! Linux Foundation Company ID, needs to be changed
+		self.vendor = 0x05F1 #!!! Linux Foundation Company ID
 		self.cmd_ops = { 0x8201,  # get
 				 0x8202,  # set
 				 0x8203,  # set unacknowledged
-				 0x8204}  # status per publication
+				 0x8204}  # status for publication
 
 		print("My Vendor Server ")
 		self.state = 0
@@ -655,281 +565,6 @@ class MyVendor(Model):
 		print("message received")
 		return
 
-"""
-########################
-# Menu functions
-########################
-class MenuItem():
-	def __init__(self, desc, func):
-		self.desc = desc
-		self.func = func
-"""
-"""
-class Menu():
-	def __init__(self, title, menu):
-		self.title = title
-		self.menu = menu
-
-	def show(self):
-		print(set_cyan('*** ' + self.title.upper() + ' ***'))
-		for k, v in self.menu.items():
-			print(set_green(k), set_cyan(v.desc))
-
-	def process_cmd(self, str_value):
-		if is_error():
-			self.show()
-			clear_error()
-			return
-
-		cmds = []
-		for key in self.menu.keys():
-			if key.startswith(str_value):
-				cmds.append(key)
-
-		if len(cmds) == 0:
-			print(set_error('Unknown menu option: '), str_value)
-			self.show()
-			return
-		if len(cmds) > 1:
-			for cmd in cmds:
-			     print(set_cyan(cmd + '?'))
-			return
-
-		self.menu.get(cmds[0]).func()
-"""
-"""
-class MenuHandler(object):
-	def __init__(self, callback):
-		self.cb = callback
-		flags = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
-		flags |= os.O_NONBLOCK
-		fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, flags)
-		sys.stdin.flush()
-		GLib.io_add_watch(sys.stdin, GLib.IO_IN, self.input_callback)
-
-	def input_callback(self, fd, condition):
-		chunk = fd.read()
-		buffer = ''
-		for char in chunk:
-			buffer += char
-			if char == '\n':
-				self.cb(buffer)
-
-		return True
-
-def process_input(input_str):
-	str_value = input_str.strip()
-
-	# Allow entering empty lines for better output visibility
-	if len(str_value) == 0:
-		return
-
-	current_menu.process_cmd(str_value)
-
-def switch_menu(level):
-	global current_menu
-
-	if level >= len(menus):
-		return
-
-	current_menu = menus[level]
-	current_menu.show()
-"""
-########################
-# Main menu class
-########################
-"""
-class MainMenu(Menu):
-	def __init__(self):
-		menu_items = {
-			'token': MenuItem(' - set node ID (token)',
-						self.__cmd_set_token),
-			'join': MenuItem(' - join mesh network',
-						self.__cmd_join),
-			'attach': MenuItem(' - attach mesh node',
-						self.__cmd_attach),
-			'remove': MenuItem(' - delete node',
-						self.__cmd_remove),
-			'dest': MenuItem(' - set destination address',
-						self.__cmd_set_dest),
-			'uuid': MenuItem(' - set remote uuid',
-						self.__cmd_set_uuid),
-			'app-index': MenuItem(' - set AppKey index',
-						self.__cmd_set_app_idx),
-			'vendor-send': MenuItem(' - send raw vendor message',
-						self.__cmd_vendor_msg),
-			'client-menu': MenuItem(' - On/Off client menu',
-						self.__cmd_client_menu),
-			'quit': MenuItem(' - exit the test', app_exit)
-		}
-
-		Menu.__init__(self, 'Main Menu', menu_items)
-
-	def __cmd_client_menu(self):
-		if attached != True:
-			print(set_error('Disallowed: node is not attached'))
-			return
-		switch_menu(ON_OFF_CLIENT_MENU)
-
-	def __cmd_set_token(self):
-		global user_input
-
-		if have_token == True:
-			print('Token already set')
-			return
-
-		user_input = INPUT_TOKEN
-		print(set_cyan('Enter 16-digit hex node ID:'))
-
-	def __cmd_set_dest(self):
-		global user_input
-
-		user_input = INPUT_DEST_ADDRESS
-		print(set_cyan('Enter 4-digit hex destination address:'))
-
-	def __cmd_set_uuid(self):
-		global user_input
-
-		user_input = INPUT_UUID
-		print(set_cyan('Enter 32-digit hex remote UUID:'))
-
-	def __cmd_set_app_idx(self):
-		global user_input
-
-		user_input = INPUT_APP_KEY_INDEX;
-		print(set_cyan('Enter app key index (up to 3 digit hex):'))
-
-	def __cmd_vendor_msg(self):
-		global user_input
-
-		user_input = INPUT_MESSAGE_PAYLOAD;
-		print(set_cyan('Enter message payload (hex):'))
-
-	def __cmd_join(self):
-		if agent == None:
-			print(set_error('Provisioning agent not found'))
-			return
-
-		uuid = bytearray.fromhex("0a0102030405060708090A0B0C0D0E0F")
-		random.shuffle(uuid)
-		uuid_str = array_to_string(uuid)
-
-		print(set_yellow('Joining with UUID ') + set_green(uuid_str))
-		mesh_net.Join(app.get_path(), uuid,
-			reply_handler=join_cb,
-			error_handler=join_error_cb)
-
-	def __cmd_attach(self):
-		if have_token == False:
-			print(set_error('Token is not set'))
-			self.show()
-			return
-
-		attach(token)
-
-	def __cmd_remove(self):
-		if have_token == False:
-			print(set_error('Token is not set'))
-			self.show()
-			return
-
-		print('Removing mesh node')
-		mesh_net.Leave(token, reply_handler=remove_node_cb,
-					error_handler=generic_error_cb)
-
-	def __send_vendor_msg(self, str_value):
-		try:
-			msg_data = bytearray.fromhex(str_value)
-		except ValueError:
-			raise_error('Not a valid hexadecimal input')
-			return
-
-		print(set_yellow('Send data: ' + set_green(str_value)))
-		app.elements[0].models[1].send_message(dst_addr, app_idx,
-							msg_data)
-
-	def process_cmd(self, str_value):
-		global user_input
-		global dst_addr
-		global app_idx
-
-		if user_input == INPUT_TOKEN:
-			set_token(str_value)
-		elif user_input == INPUT_UUID:
-			set_uuid(str_value)
-		elif user_input == INPUT_DEST_ADDRESS:
-			res = set_value(str_value, 4, 4)
-			if is_error() != True:
-				dst_addr = res
-				print(set_yellow("Destination address: ") +
-					set_green(format(dst_addr, '04x')))
-		elif user_input == INPUT_APP_KEY_INDEX:
-			res = set_value(str_value, 1, 3)
-			if is_error() != True:
-				app_idx = res
-				print(set_yellow("Application index: ") +
-					set_green(format(app_idx, '03x')))
-		elif  user_input == INPUT_MESSAGE_PAYLOAD:
-			self.__send_vendor_msg(str_value)
-
-		if user_input != INPUT_NONE:
-			user_input = INPUT_NONE
-			if is_error() != True:
-				return
-
-		Menu.process_cmd(self, str_value)
-
-##############################
-# On/Off Client menu class
-##############################
-
-class ClientMenu(Menu):
-	def __init__(self):
-		menu_items = {
-			'get-state': MenuItem(' - get server state',
-						self.__cmd_get_state),
-			'off': MenuItem(' - set state OFF',
-						self.__cmd_set_state_off),
-			'on': MenuItem(' - set state ON',
-						self.__cmd_set_state_on),
-			'repeat': MenuItem(' - repeat last command',
-						self.__cmd_repeat_transaction),
-			'back': MenuItem(' - back to main menu',
-						self.__cmd_main_menu),
-			'quit': MenuItem(' - exit the test', app_exit)
-		}
-
-		Menu.__init__(self, 'On/Off Client Menu', menu_items)
-
-	def __cmd_main_menu(self):
-		switch_menu(MAIN_MENU)
-
-	def __cmd_get_state(self):
-		app.elements[1].models[0].get_state(dst_addr, app_idx)
-
-	def __cmd_set_state_off(self):
-		app.elements[1].models[0].set_state(dst_addr, app_idx, 0)
-
-	def __cmd_set_state_on(self):
-		app.elements[1].models[0].set_state(dst_addr, app_idx, 1)
-
-	def __cmd_repeat_transaction(self):
-		app.elements[1].models[0].repeat(dst_addr, app_idx)
-
-def set_value(str_value, min, max):
-
-	if len(str_value) > max or len(str_value) < min:
-		raise_error('Bad input length %d' % len(str_value))
-		return -1
-
-	try:
-		value = int(str_value, 16)
-	except ValueError:
-		raise_error('Not a valid hexadecimal number')
-		return -1
-
-	return value
-"""
 
 ########################
 # Main entry
@@ -962,54 +597,12 @@ def main():
 		app.set_agent(agent.Agent(bus))
 
 	first_ele = Element(bus, 0x00)
-	#second_ele = Element(bus, 0x01)
 
 	print(set_yellow('Register MyVendor model on element 0'))
 	first_ele.add_model(MyVendor(0x0001))
-	
-	#print(set_yellow('Register OnOff Client model on element 0'))
-	#first_ele.add_model(OnOffClient(0x1001))
-	
-	#print(set_yellow('Register OnOff Client model on element 1'))
-	#second_ele.add_model(OnOffClient(0x1001))
 
 	app.add_element(first_ele)
-	# app.add_element(second_ele)
 	mainloop = GLib.MainLoop()
-
-	"""
-	mainloop = GLib.MainLoop()
-
-	menus.append(MainMenu())
-	menus.append(ClientMenu())
-	switch_menu(MAIN_MENU)
-
-	event_catcher = MenuHandler(process_input);
-	mainloop.run()
-	"""
-
-	"""
-	aggiungere controllo per vedere se esiste già un nodo
-	creare file esterno con token quando viene fatto provisioning, tutte le altre volte
-	controllare che il file non sia vuoto. Ricroda che esiste la variabile have_token
-	"""
-	"""
-	# Provisioning...
-	if agent == None:
-		print(set_error('Provisioning agent not found'))
-		return
-
-	uuid = bytearray.fromhex("0a0102030405060708090A0B0C0D0E0F")
-	random.shuffle(uuid)
-	uuid_str = array_to_string(uuid)
-
-	print(set_yellow('Joining with UUID ') + set_green(uuid_str))
-	mesh_net.Join(app.get_path(), uuid,
-		reply_handler=join_cb,
-		error_handler=join_error_cb)
-	# Attaching if already provisioned
-	
-	"""
 	
 	token = 0x33b6b25931370eeb
 	attach(token)
