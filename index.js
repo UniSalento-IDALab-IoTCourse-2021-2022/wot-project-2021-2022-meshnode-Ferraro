@@ -18,9 +18,6 @@ bluetooth.init().then(async () => {
     // listen on first bluetooth adapter
     const adapter = await bluetooth.getAdapter();
     await adapter.StartDiscovery();
-    //console.log("Discovering");
-
-    //after a while await adapter.StopDiscovery()
     
 }).catch(console.error);
 
