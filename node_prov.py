@@ -1,96 +1,6 @@
 #!/usr/bin/env python3
 
-###################################################################
-#
-# This is a unified test sample for BT Mesh
-#
-# To run the test:
-#     test-mesh [token]
-#
-#            'token' is an optional argument. It must be a 16-digit
-#            hexadecimal number. The token must be associated with
-#            an existing node. The token is generated and assigned
-#            to a node as a result of successful provisioning (see
-#            explanation of "join" option).
-#            When the token is set, the menu operations "attach"
-#            and "remove" may be performed on a node specified
-#            by this token.
-#
-#      The test imitates a device with 2 elements:
-#            element 0: OnOff Server model
-#                       Sample Vendor model
-#            element 1: OnOff Client model
-#
-# The main menu:
-#       token
-#       join
-#       attach
-#       remove
-#       dest
-#       uuid
-#       app-index
-#       client-menu
-#       exit
-#
-# The main menu options explained:
-#     token
-#            Set the unique node token.
-#            The token can be set from command line arguments as
-#            well.
-#
-#     join
-#            Request provisioning of a device to become a node
-#            on a mesh network. The test generates device UUID
-#            which is displayed and will need to be provided to
-#            an outside entity that acts as a Provisioner. Also,
-#            during the provisioning process, an agent that is
-#            part of the test, will request (or will be requested)
-#            to perform a specified operation, e.g., a number will
-#            be displayed and this number will need to be  entered
-#            on the Provisioner's side.
-#            In case of successful provisioning, the application
-#            automatically attaches as a node to the daemon. A node
-#            'token' is returned to the application and is used
-#            for the runtime of the test.
-#
-#     attach
-#            Attach the application to bluetoothd-daemon as a node.
-#            For the call to be successful, the valid node token must
-#            be already set, either from command arguments or by
-#            executing "set token" operation or automatically after
-#            successfully executing "join" operation in the same
-#            test run.
-#
-#     remove
-#           Permanently removes any node configuration from daemon
-#           and persistent storage. After this operation, the node
-#           is permanently forgotten by the daemon and the associated
-#           node token is no longer valid.
-#
-#     dest
-#           Set destination address to send messages: 4 hex digits
-#
-#     app-index
-#           Set AppKey index to indicate which application key to use
-#           to encode outgoing messages: up to 3 hex digits
-#
-#     vendor-send
-#           Allows to send an arbitrary endor message.
-#           The destination is set based on previously executed "dest"
-#           command (if not set, the outbound message will fail).
-#           User is prompted to enter hex bytearray payload.
-#           The message is originated from the vendor model registered
-#           on element 0. For the command to succeed, the AppKey index
-#           that is set by executing "app-key" must correspond to the
-#           application key to which the Sample Vendor model is bound.
-#
-#     client-menu
-#           Enter On/Off client submenu.
-#
-#     quit
-#           Exits the test.
-#
-###################################################################
+
 import sys
 import struct
 import fcntl
@@ -593,7 +503,7 @@ class Model():
 class MyVendor(Model):
 	def __init__(self, model_id):
 		Model.__init__(self, model_id)
-		self.vendor = 0x05F1 #!!! Linux Foundation Company ID, needs to be changed
+		self.vendor = 0x05F1 #!!! Linux Foundation Company ID
 		self.cmd_ops = { 0x8201,  # get
 				 0x8202,  # set
 				 0x8203,  # set unacknowledged
@@ -686,19 +596,12 @@ def main():
 		app.set_agent(agent.Agent(bus))
 
 	first_ele = Element(bus, 0x00)
-	#second_ele = Element(bus, 0x01)
 
 	print(set_yellow('Register MyVendor model on element 0'))
 	first_ele.add_model(MyVendor(0x0001))
 	
-	#print(set_yellow('Register OnOff Client model on element 0'))
-	#first_ele.add_model(OnOffClient(0x1001))
-	
-	#print(set_yellow('Register OnOff Client model on element 1'))
-	#second_ele.add_model(OnOffClient(0x1001))
 
 	app.add_element(first_ele)
-	# app.add_element(second_ele)
 	mainloop = GLib.MainLoop()
 
 	# Provisioning...
